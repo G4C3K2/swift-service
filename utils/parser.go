@@ -1,53 +1,89 @@
 package utils
 
 import (
+	"context"
+	"encoding/csv"
+	"fmt"
 	"log"
+	"os"
 	"strings"
+	"time"
+
+	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/G4C3K2/swift-service/models"
 )
 
-func ParseSheetData(values [][]interface{}) []models.SwiftEntry {
-	var entries []models.SwiftEntry
+func LoadData(fileName string, collection *mongo.Collection) {
+	file, err := os.Open(fileName)
+	if err != nil {
+		log.Fatal("Cannot read the file:", err)
+	}
+	defer file.Close()
 
-	for i, row := range values {
-		if i == 0 {
-			continue // pomiń nagłówki
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+	if err != nil {
+		log.Fatal("Error reading records:", err)
+	}
+
+	if len(records) < 2 {
+		log.Println("Brak danych w pliku lub tylko nagłówek")
+		return
+	}
+
+	header := records[0]
+	indexMap := map[string]int{}
+	for i, col := range header {
+		indexMap[strings.ToUpper(strings.TrimSpace(col))] = i
+	}
+
+	get := func(record []string, field string) string {
+		idx, ok := indexMap[strings.ToUpper(field)]
+		if !ok || idx >= len(record) {
+			return ""
 		}
+		return strings.TrimSpace(record[idx])
+	}
 
-		if len(row) < 6 {
-			log.Printf("Pominięto wiersz %d - za mało kolumn", i+1)
-			continue
+	const batchSize = 100
+	var batch []interface{}
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
+	for i, record := range records[1:] {
+		swift := get(record, "SWIFT CODE")
+		isHQ := strings.HasSuffix(swift, "XXX")
+
+		addr := get(record, "ADDRESS")
+		var addressPtr *string
+		if addr != "" {
+			addressPtr = &addr
 		}
 
 		entry := models.SwiftEntry{
-			SwiftCode:     toString(row[0]),
-			BankName:      toString(row[1]),
-			Address:       toString(row[2]),
-			CountryISO2:   toString(row[3]),
-			CountryName:   toString(row[4]),
-			IsHeadquarter: toBool(row[5]),
+			SwiftCode:     swift,
+			CodeType:      get(record, "CODE TYPE"),
+			Name:          get(record, "NAME"),
+			Address:       addressPtr,
+			TownName:      get(record, "TOWN NAME"),
+			CountryCode:   get(record, "COUNTRY ISO2 CODE"),
+			CountryName:   get(record, "COUNTRY NAME"),
+			TimeZone:      get(record, "TIME ZONE"),
+			IsHeadquarter: isHQ,
 		}
 
-		if len(row) >= 7 {
-			entry.HeadquarterCode = toString(row[6])
+		batch = append(batch, entry)
+
+		// Wysyłaj paczką co 100 lub na końcu
+		if len(batch) == batchSize || i == len(records[1:])-1 {
+			_, err := collection.InsertMany(ctx, batch)
+			if err != nil {
+				log.Println("Błąd przy batchowym dodawaniu:", err)
+			} else {
+				fmt.Printf("Dodano batch %d rekordów\n", len(batch))
+			}
+			batch = nil
 		}
-
-		entries = append(entries, entry)
 	}
-
-	return entries
-}
-
-func toString(val interface{}) string {
-	str, ok := val.(string)
-	if !ok {
-		return ""
-	}
-	return strings.TrimSpace(str)
-}
-
-func toBool(val interface{}) bool {
-	str := toString(val)
-	return strings.ToLower(str) == "true" || str == "1" || str == "yes"
 }
