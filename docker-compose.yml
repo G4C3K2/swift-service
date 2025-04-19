@@ -1,0 +1,22 @@
+services:
+  app:
+    build: .
+    container_name: swift-service
+    ports:
+      - "8080:8080"
+    environment:
+      - MONGO_URI=mongodb+srv://kamilkoscielny2002:Qetuoadgjlxvn.1@cluster0.wpmnnvs.mongodb.net/
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/secrets/credentials.json
+      - SHEET_ID=1iFFqsu_xruvVKzXAadAAlDBpIuU51v-pfIEU5HeGa8w
+      - SHEET_RANGE=Sheet1!A1:H1500
+    volumes:
+      - ./secrets/credentials.json:/app/secrets/credentials.json
+    networks:
+      - swift-net
+
+volumes:
+  mongo-data:
+
+networks:
+  swift-net:
+    driver: bridge
