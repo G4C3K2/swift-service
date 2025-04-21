@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/G4C3K2/swift-service/models"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -38,4 +39,28 @@ func InsertMany(entries []models.SwiftEntry) {
 	if err != nil {
 		log.Fatalf("Błąd przy zapisie do Mongo: %v", err)
 	}
+}
+
+func FindBySwiftCode(ctx context.Context, collection *mongo.Collection, swiftCode string) (*models.SwiftEntry, error) {
+	var result models.SwiftEntry
+	err := collection.FindOne(ctx, bson.M{"swift_code": swiftCode}).Decode(&result)
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func FindBranchesByHqCode(ctx context.Context, collection *mongo.Collection, hqCode string) ([]models.SwiftEntry, error) {
+	cursor, err := collection.Find(ctx, bson.M{"hqCode": hqCode})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var branches []models.SwiftEntry
+	if err := cursor.All(ctx, &branches); err != nil {
+		return nil, err
+	}
+
+	return branches, nil
 }

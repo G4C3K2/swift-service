@@ -1,29 +1,29 @@
 package main
 
 import (
-	"context"
 	"log"
 
-	"github.com/G4C3K2/swift-service/utils"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"github.com/G4C3K2/swift-service/config"
+	"github.com/G4C3K2/swift-service/routes"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	// Tworzymy opcje klienta z URI MongoDB
-	clientOptions := options.Client().ApplyURI("mongodb+srv://kamilkoscielny2002:Qetuoadgjlxvn.1@cluster0.wpmnnvs.mongodb.net/")
+	collection := config.DatabaseConnection()
 
-	// Łączymy się z bazą
-	client, err := mongo.Connect(context.TODO(), clientOptions)
-	if err != nil {
-		log.Fatal("Błąd połączenia z MongoDB:", err)
+	router := gin.Default()
+
+	routes.SetupRoutes(router, collection)
+
+	router.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "Swift service is running...",
+		})
+	})
+
+	log.Println("Listening on :8080...")
+	if err := router.Run(":8080"); err != nil {
+		log.Fatal("Błąd uruchomienia serwera:", err)
 	}
-	defer client.Disconnect(context.TODO())
-
-	// Wybieramy bazę i kolekcję
-	db := client.Database("swiftdb")
-	collection := db.Collection("entries")
-
-	// Ładujemy dane z pliku CSV
-	utils.LoadData("Data.csv", collection)
 }
