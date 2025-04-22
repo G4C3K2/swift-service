@@ -45,7 +45,28 @@ func InsertMany(entries []models.SwiftEntry) {
 
 func InsertSwiftEntry(entry *models.SwiftEntry, collection *mongo.Collection) error {
 	_, err := collection.InsertOne(context.Background(), entry)
+	if err != nil {
+		log.Printf("InsertSwiftEntry: Failed to save data: %v\n", err)
+		return err
+	}
+	log.Printf("InsertSwiftEntry: Data saved successfuly")
 	return err
+}
+
+func DeleteSwift(swiftcode string, collection *mongo.Collection) error {
+	log.Printf("Repository DeleteSwift: Function called for swiftcode: %s\n", swiftcode)
+	filter := bson.M{"swift_code": swiftcode}
+	result, err := collection.DeleteOne(context.Background(), filter)
+	if err != nil {
+		log.Printf("Repository DeleteSwift: Error during swiftcode %s deletion: %v\n", swiftcode, err)
+		return err
+	}
+	if result.DeletedCount == 0 {
+		log.Printf("Repository DeleteSwift: No swiftcode %s found for deletion\n", swiftcode)
+		return nil
+	}
+	log.Printf("Repository DeleteSwift: Successfully deleted swiftcode: %s\n", swiftcode)
+	return nil
 }
 
 func FindBySwiftCode(ctx context.Context, collection *mongo.Collection, swiftCode string) (*models.SwiftEntry, error) {
@@ -84,7 +105,6 @@ func FindBranchesByHqCode(ctx context.Context, collection *mongo.Collection, hqC
 func FindByCountryCode(ctx context.Context, collection *mongo.Collection, countryISO2 string) (*models.CountryShort, error) {
 	log.Printf("FindByCountryCode: Searching for country with country_code = %s\n", countryISO2)
 
-	// No separate country documents, so we fetch from the first available bank
 	filter := bson.M{"country_code": countryISO2}
 	projection := bson.M{
 		"_id":          0,

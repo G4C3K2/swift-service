@@ -108,3 +108,20 @@ func AddSwiftCode(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{"message": "New SwiftCode Added Successfuly"})
 }
+
+func DeleteSwiftCode(c *gin.Context) {
+	swiftCode := c.Param("swiftCode")
+
+	if swiftCode == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Swiftcode is required"})
+		return
+	}
+
+	err := services.DeleteSwiftEntry(swiftCode, Collection)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete Swift entry: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Swift code " + swiftCode + " successfully deleted"})
+}

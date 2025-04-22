@@ -15,13 +15,11 @@ func SaveSwiftEntries(data []map[string]string, collection *mongo.Collection) er
 	log.Printf("SaveSwiftEntries: Start - number of input records: %d\n", len(data))
 	var entries []interface{}
 
-	for i, record := range data {
+	for _, record := range data {
 		swift := record["SWIFT CODE"]
 		code := strings.ToUpper(record["COUNTRY ISO2 CODE"])
 		name := strings.ToUpper(record["NAME"])
 		address := record["ADDRESS"]
-
-		log.Printf("SaveSwiftEntries: Processing record #%d: SWIFT=%s, CODE=%s, NAME=%s\n", i+1, swift, code, name)
 
 		var addrPtr *string
 		if strings.TrimSpace(address) != "" {
@@ -156,5 +154,22 @@ func GetCountryISO2Details(countryISO2 string, collection *mongo.Collection) (*m
 
 func CreateSwiftEntry(entry *models.SwiftEntry, collection *mongo.Collection) error {
 	err := repository.InsertSwiftEntry(entry, collection)
+	if err != nil {
+		log.Printf("CreateSwiftEntry: Failed to create entry: %v\n", err)
+		return err
+	}
+	log.Printf("CreateSwiftEntry: Entry created successfuly: %v\n", err)
 	return err
+}
+
+func DeleteSwiftEntry(swiftcode string, collection *mongo.Collection) error {
+	log.Printf("Service DeleteSwiftEntry: Before calling repository.DeleteSwift with swiftcode: %s\n", swiftcode)
+	err := repository.DeleteSwift(swiftcode, collection)
+	log.Printf("Service DeleteSwiftEntry: After calling repository.DeleteSwift with swiftcode: %s, err: %v\n", swiftcode, err)
+	if err != nil {
+		log.Printf("Service DeleteSwiftEntry: Failed to delete data with Swiftcode %s: %v\n", swiftcode, err)
+		return err
+	}
+	log.Printf("Service DeleteSwiftEntry: Data with Swiftcode %s removal initiated successfully\n", swiftcode)
+	return nil
 }

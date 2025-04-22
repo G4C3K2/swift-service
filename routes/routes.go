@@ -27,6 +27,8 @@ func SetupRoutes(router *gin.Engine, collection *mongo.Collection) {
 		swiftGroup.GET("/country/:countryISO2code", controllers.GetCountryISO2Details)
 
 		swiftGroup.POST("/", controllers.AddSwiftCode)
+
+		swiftGroup.DELETE("/:swiftCode", controllers.DeleteSwiftCode)
 	}
 
 	log.Println("Routing finished.")

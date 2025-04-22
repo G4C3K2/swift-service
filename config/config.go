@@ -26,6 +26,6 @@ func DatabaseConnection() *mongo.Collection {
 		log.Fatal("MongoDB does not respond:", err)
 	}
 
-	db := client.Database("swiftdb")
+	db := client.Database("swift") // Zmień na "swift"
 	return db.Collection("entries")
 }
