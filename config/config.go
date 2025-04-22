@@ -12,18 +12,18 @@ import (
 func DatabaseConnection() *mongo.Collection {
 	mongoURI := os.Getenv("MONGO_URI")
 	if mongoURI == "" {
-		log.Fatal("Brak MONGO_URI w zmiennych środowiskowych")
+		log.Fatal("MONGO_URI does not exist in environment variables")
 	}
 
 	clientOptions := options.Client().ApplyURI(mongoURI)
 
 	client, err := mongo.Connect(context.TODO(), clientOptions)
 	if err != nil {
-		log.Fatal("Błąd połączenia z MongoDB:", err)
+		log.Fatal("MongoDB connection error:", err)
 	}
 
 	if err := client.Ping(context.TODO(), nil); err != nil {
-		log.Fatal("MongoDB nie odpowiada:", err)
+		log.Fatal("MongoDB does not respond:", err)
 	}
 
 	db := client.Database("swiftdb")

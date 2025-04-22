@@ -30,3 +30,14 @@ type SwiftBranch struct {
 	IsHeadquarter bool    `json:"isHeadquarter"`
 	SwiftCode     string  `json:"swiftCode"`
 }
+
+type CountryISO2CodeResponse struct {
+	CountryISO2 string        `json:"countryISO2"`
+	CountryName string        `json:"countryName"`
+	SwiftCodes  []SwiftBranch `json:"swifts,omitempty"`
+}
+
+type CountryShort struct {
+	CountryCode string `bson:"country_code"`
+	CountryName string `bson:"country_name"`
+}

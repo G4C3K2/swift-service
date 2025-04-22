@@ -16,14 +16,10 @@ func main() {
 
 	routes.SetupRoutes(router, collection)
 
-	router.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "Swift service is running...",
-		})
-	})
+	log.Println("Routing completed, starting server")
 
 	log.Println("Listening on :8080...")
 	if err := router.Run(":8080"); err != nil {
-		log.Fatal("Błąd uruchomienia serwera:", err)
+		log.Fatal("Starting server error:", err)
 	}
 }
