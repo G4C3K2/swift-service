@@ -5,7 +5,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - MONGO_URI=mongodb+srv://kamilkoscielny2002:Qetuoadgjlxvn.1@cluster0.wpmnnvs.mongodb.net/
+      - MONGO_URI=mongodb+srv://<user>:<password>.1@cluster0.wpmnnvs.mongodb.net/
     volumes:
       - ./secrets/credentials.json:/app/secrets/credentials.json
       - ./Data.csv:/root/Data.csv
