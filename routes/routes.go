@@ -25,6 +25,8 @@ func SetupRoutes(router *gin.Engine, collection *mongo.Collection) {
 		swiftGroup.GET("/:swiftCode", controllers.GetSwiftCodeDetails)
 
 		swiftGroup.GET("/country/:countryISO2code", controllers.GetCountryISO2Details)
+
+		swiftGroup.POST("/", controllers.AddSwiftCode)
 	}
 
 	log.Println("Routing finished.")

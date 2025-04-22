@@ -3,7 +3,9 @@ package controllers
 import (
 	"log"
 	"net/http"
+	"strings"
 
+	"github.com/G4C3K2/swift-service/models"
 	"github.com/G4C3K2/swift-service/services"
 	"github.com/G4C3K2/swift-service/utils"
 
@@ -63,4 +65,46 @@ func GetCountryISO2Details(c *gin.Context) {
 
 	log.Printf("Country ISO2 Code Found: %s", countryISO2)
 	c.JSON(http.StatusOK, result)
+}
+
+func AddSwiftCode(c *gin.Context) {
+	var req models.AddSwiftCodeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var hqCode *string
+	if !strings.HasSuffix(req.SwiftCode, "XXX") {
+		hq := req.SwiftCode[:len(req.SwiftCode)-3] + "XXX"
+		hqCode = &hq
+	} else {
+		hqCode = nil
+	}
+
+	if req.SwiftCode == "" || len(req.SwiftCode) != 11 || len(req.CountryISO2) != 2 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Nieprawidłowe dane wejściowe"})
+		return
+	}
+
+	swiftEntry := models.SwiftEntry{
+		SwiftCode:     req.SwiftCode,
+		CodeType:      "BIC",
+		Name:          req.BankName,
+		Address:       &req.Address,
+		TownName:      "",
+		CountryCode:   req.CountryISO2,
+		CountryName:   req.CountryName,
+		TimeZone:      "",
+		IsHeadquarter: req.IsHeadquarter,
+		HqCode:        hqCode,
+	}
+
+	err := services.CreateSwiftEntry(&swiftEntry, Collection)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Saving data failed", "error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"message": "New SwiftCode Added Successfuly"})
 }

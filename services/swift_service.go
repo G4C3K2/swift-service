@@ -153,3 +153,8 @@ func GetCountryISO2Details(countryISO2 string, collection *mongo.Collection) (*m
 	log.Printf("GetCountryISO2Details: Returning response: %+v\n", response)
 	return response, nil
 }
+
+func CreateSwiftEntry(entry *models.SwiftEntry, collection *mongo.Collection) error {
+	err := repository.InsertSwiftEntry(entry, collection)
+	return err
+}

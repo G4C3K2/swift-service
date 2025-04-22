@@ -43,6 +43,11 @@ func InsertMany(entries []models.SwiftEntry) {
 	}
 }
 
+func InsertSwiftEntry(entry *models.SwiftEntry, collection *mongo.Collection) error {
+	_, err := collection.InsertOne(context.Background(), entry)
+	return err
+}
+
 func FindBySwiftCode(ctx context.Context, collection *mongo.Collection, swiftCode string) (*models.SwiftEntry, error) {
 	log.Printf("FindBySwiftCode: Searching for document with SWIFT code = %s\n", swiftCode)
 
